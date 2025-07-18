@@ -1,0 +1,56 @@
+    body {
+        font-family: sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        margin: auto;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #f0f0f0;
+    }
+
+    button {
+        padding: 10px 15px;
+        margin-top: 10px;
+    }
+
+    .gear-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .gear-group input {
+        flex: 1;
+    }
+
+    .gear-label {
+        min-width: 50px;
+        line-height: 32px;
+    }
+
+    canvas {
+        height: 400px;
+        width: 100vw;
+        display: block;
+    }
