@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Trionic 7 Gear Calibration Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin-top: 10px;
+    }
+
+    .gear-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+
+    .gear-group input {
+      flex: 1;
+    }
+
+    .gear-label {
+      min-width: 50px;
+      line-height: 32px;
+    }
+
+    canvas {
+      height: 400px;
+      width: 100vw;
+      display: block;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <h2>Trionic 7 Manual Gearbox Calibration Calculator</h2>
+  <label for="templateSelect">Select Template:</label>
+  <select id="templateSelect" onchange="loadTemplate()">
+    <option value="">-- Choose a template --</option>
+    <option value="fm55">FM55</option>
+    <option value="fm57">FM57</option>
+    <option value="roffe">Roffe's Quaife</option>
+  </select>
+
+  <label>Final Drive Ratio: <input type="number" step="0.01" id="finalDrive" value="3.61"></label>
+  <label>Representative RPM: <input type="number" id="rpm" value="3000"></label>
+  <label>Tire Diameter (m): <input type="number" step="0.001" id="tireDiameter" value="0.626"></label>
+
+  <h3>Gear Ratio & Tolerance %</h3>
+  <div id="gearInputs">
+    <div class="gear-group">
+      <span class="gear-label">1st</span>
+      <input type="number" step="0.01" class="gearRatio" value="3.00">
+      <input type="number" step="0.1" class="tolerance" value="25.9" placeholder="Tolerance %">
+    </div>
+    <div class="gear-group">
+      <span class="gear-label">2nd</span>
+      <input type="number" step="0.01" class="gearRatio" value="1.933">
+      <input type="number" step="0.1" class="tolerance" value="20">
+    </div>
+    <div class="gear-group">
+      <span class="gear-label">3rd</span>
+      <input type="number" step="0.01" class="gearRatio" value="1.368">
+      <input type="number" step="0.1" class="tolerance" value="14.9">
+    </div>
+    <div class="gear-group">
+      <span class="gear-label">4th</span>
+      <input type="number" step="0.01" class="gearRatio" value="1.045">
+      <input type="number" step="0.1" class="tolerance" value="11.5">
+    </div>
+    <div class="gear-group">
+      <span class="gear-label">5th</span>
+      <input type="number" step="0.01" class="gearRatio" value="0.833">
+      <input type="number" step="0.1" class="tolerance" value="11">
+    </div>
+    <div class="gear-group">
+      <span class="gear-label">6th</span>
+      <input type="number" step="0.01" class="gearRatio" value="0.704">
+      <input type="number" step="0.1" class="tolerance" value="10.5">
+    </div>
+  </div>
+
+  <button onclick="calculateRatios()">Calculate</button>
+
+  <table id="outputTable" style="display:none">
+    <thead>
+      <tr>
+        <th>Gear</th>
+        <th>GearCal.Ratio</th>
+        <th>GearCal.Range (±Tolerance)</th>
+        <th>Speed at Representative RPM (km/h)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!--<h3>Speed vs RPM Plot</h3>-->
+  <canvas id="gearChart" width="700" height="400"></canvas>
+
+  <script>
+
+    const templates = {
+      fm55: {
+        finalDrive: 4.05,
+        rpm: 3000,
+        tireDiameter: 0.626,
+        gearRatios: [3.38, 1.76, 1.18, 0.89, 0.66, 0],
+        tolerances: [25.9, 19.8, 14.9, 11.5, 11, 0]
+      },
+      fm57: {
+        finalDrive: 3.828,
+        rpm: 3000,
+        tireDiameter: 0.626,
+        gearRatios: [3.38, 1.76, 1.18, 0.89, 0.66, 0],
+        tolerances: [27.4, 21, 15.5, 11.7, 11.5, 0]
+      },
+      roffe: {
+        finalDrive: 3.61,
+        rpm: 3000,
+        tireDiameter: 0.626,
+        gearRatios: [3.00, 1.933, 1.368, 1.045, 0.833, 0.704],
+        tolerances: [25.9, 19.8, 14.9, 11.5, 11, 10.5]
+      }
+    };
+
+    function loadTemplate() {
+      const selected = document.getElementById('templateSelect').value;
+      if (!templates[selected]) return;
+
+      const tmpl = templates[selected];
+      document.getElementById('finalDrive').value = tmpl.finalDrive;
+      document.getElementById('rpm').value = tmpl.rpm;
+      document.getElementById('tireDiameter').value = tmpl.tireDiameter;
+
+      const gearInputs = document.querySelectorAll('.gearRatio');
+      const tolInputs = document.querySelectorAll('.tolerance');
+
+      tmpl.gearRatios.forEach((val, i) => {
+        if (val !== null) gearInputs[i].value = val;
+      });
+      tmpl.tolerances.forEach((val, i) => {
+        if (val !== null) tolInputs[i].value = val;
+      });
+      calculateRatios();
+    }
+
+    let gearChartInstance = null;
+
+    function calculateRatios() {
+      const fd = parseFloat(document.getElementById('finalDrive').value);
+      const baseRpm = parseFloat(document.getElementById('rpm').value);
+      const td = parseFloat(document.getElementById('tireDiameter').value);
+      const gears = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+      const gearRatios = [...document.querySelectorAll('.gearRatio')].map(el => parseFloat(el.value));
+      const tolerances = [...document.querySelectorAll('.tolerance')].map(el => parseFloat(el.value));
+
+      const tbody = document.querySelector('#outputTable tbody');
+      tbody.innerHTML = '';
+
+      if (gearRatios[5] == "0") {
+        gearRatios.pop();
+        gears.pop();
+        tolerances.pop();
+      }
+
+      // Table Output
+      gearRatios.forEach((gr, i) => {
+        const wheelRPM = baseRpm / (gr * fd);
+        const speedKmh = (wheelRPM * Math.PI * td * 60) / 1000;
+        const ratio = (baseRpm * 10) / speedKmh;
+        const ratioInt = Math.round(ratio);
+        const range = Math.round(ratio * (tolerances[i] / 100));
+
+        const row = `<tr><td>${gears[i]}</td><td>${ratioInt}</td><td>${range}</td><td>${speedKmh.toFixed(1)}</td></tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+
+      document.getElementById('outputTable').style.display = 'table';
+
+      // Chart Output
+      const rpmPoints = [];
+      for (let rpm = 600; rpm <= 8000; rpm += 100) {
+        rpmPoints.push(rpm);
+      }
+
+
+
+      const datasets = gearRatios.map((gr, idx) => {
+        const data = rpmPoints.map(rpm => {
+          const wheelRPM = rpm / (gr * fd);
+          const speedKmh = (wheelRPM * Math.PI * td * 60) / 1000;
+          return { x: rpm, y: speedKmh };
+        });
+
+        return {
+          label: gears[idx],
+          data,
+          borderWidth: 2,
+          fill: false
+        };
+      });
+
+      const ctx = document.getElementById('gearChart').getContext('2d');
+      if (gearChartInstance) {
+        gearChartInstance.destroy();
+      }
+
+      gearChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              type: 'linear',
+              title: { display: true, text: 'Engine RPM' },
+              min: 600,
+              max: 8000
+            },
+            y: {
+              title: { display: true, text: 'Speed (km/h)' }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            tooltip: {
+              mode: 'nearest',
+              intersect: false
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
