@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>Trionic 7 Gear Calibration Calculator</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="chart.js"></script>
   <script src="app.js"></script>
 </head>
 
@@ -18,11 +18,9 @@
     <option value="fm57">FM57</option>
     <option value="roffe">Roffe's Quaife</option>
   </select>
-
-  <label>Final Drive Ratio: <input type="number" step="0.01" id="finalDrive" value="3.61"></label>
+  <label>Final Drive: <input type="number" step="0.01" id="finalDrive" value="3.61"></label>
   <label>Representative RPM: <input type="number" id="rpm" value="3000"></label>
   <label>Tire Diameter (m): <input type="number" step="0.001" id="tireDiameter" value="0.626"></label>
-
   <h3>Gear Ratio & Tolerance %</h3>
   <div id="gearInputs">
     <div class="gear-group">
@@ -56,9 +54,7 @@
       <input type="number" step="0.1" class="tolerance" value="10.5">
     </div>
   </div>
-
   <button onclick="calculateRatios()">Calculate</button>
-
   <table id="outputTable" style="display:none">
     <thead>
       <tr>
@@ -70,8 +66,6 @@
     </thead>
     <tbody></tbody>
   </table>
-
-  <!--<h3>Speed vs RPM Plot</h3>-->
   <canvas id="gearChart" width="700" height="400"></canvas>
 </body>
 
